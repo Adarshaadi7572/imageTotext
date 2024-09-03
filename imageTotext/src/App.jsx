@@ -32,7 +32,7 @@ function App() {
   const image = useRef(null);
   //Handler Function 
   const cameraHandler = () => {
-    navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 640,facingMode:'environment' } })
+    navigator.mediaDevices.getUserMedia({ video: {facingMode:'environment', width: 640, height: 640, } })
       .then((stream) => {
         video.current.srcObject = stream;
         video.current.play();
