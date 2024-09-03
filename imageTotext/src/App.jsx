@@ -216,7 +216,7 @@ function App() {
           <video className="no-mirror w-full h-full object-cover bg-red-200" ref={video}></video>
           <canvas ref={photo} className='hidden'></canvas>
 
-          <div className='absolute left-[20px] bottom-[20px]'>
+          <div className='absolute left-[20px] bottom-[30px]'>
 
             <Button variant="contained" color="success" onClick={captureHandler}>
               Capture
