@@ -1,14 +1,12 @@
+
 import { useState, useRef, useEffect } from 'react'
 import { styled } from '@mui/material/styles';
 import Button from '@mui/material/Button';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CenterFocusWeakIcon from '@mui/icons-material/CenterFocusWeak';
-import Textarea from '@mui/joy/Textarea';
 import Tesseract from 'tesseract.js';
-import Box from '@mui/material/Box';
 import LinearProgress from '@mui/material/LinearProgress';
 import './App.css';
-import { Calculate } from '@mui/icons-material';
 function App() {
   const [visible, setVisible] = useState(false);
   const [data, setData] = useState("");
@@ -32,7 +30,7 @@ function App() {
   const image = useRef(null);
   //Handler Function 
   const cameraHandler = () => {
-    navigator.mediaDevices.getUserMedia({ video: {facingMode:'environment', width: 640, height: 640, } })
+    navigator.mediaDevices.getUserMedia({ video: {facingMode:'environment' } })
       .then((stream) => {
         video.current.srcObject = stream;
         video.current.play();
@@ -40,23 +38,25 @@ function App() {
       }).catch((error) => console.log(error));
     setVisible((state) => !state);
   }
-  const captureHandler = () => {
-    console.log("start");
+  //preprocessing image 
+
+  const captureHandler = async () => {
+
 
     const width = 640;
     const height = 640;
 
     let vid = video.current;
     let img = photo.current;
-    console.log("image......", img);
+   
     img.width = width;
     img.height = height;
     console.log("mid");
     let ctx = img.getContext("2d");
     ctx.drawImage(vid, 0, 0, width, height);
-    console.log("image Drawd");
+   
     let url = img.toDataURL('image/png');
-    console.log(url);
+   
     setVisible((state) => !state);
     const stream = vid.srcObject;
     const tracks = stream.getTracks();
@@ -212,8 +212,8 @@ function App() {
         </div>
       </div>
       <div ref={cameradiv} className={`modal bg-slate-800 flex w-full h-screen justify-center items-center ${visible ? '' : 'hidden'}`}>
-        <div className=' modal-content animate bg-blue-400 relative w-[40rem] h-[40rem]'>
-          <video className="no-mirror w-[40rem] h-[40rem] bg-red-200" ref={video}></video>
+        <div className=' relative w-full h-full max-w-[40rem] max-h-[40rem] overflow-hidden animate bg-blue-400 relative w-[40rem] h-[40rem]'>
+          <video className="no-mirror w-full h-full object-cover bg-red-200" ref={video}></video>
           <canvas ref={photo} className='hidden'></canvas>
 
           <div className='absolute left-[20px] bottom-[20px]'>
