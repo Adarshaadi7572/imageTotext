@@ -39,31 +39,38 @@ function App() {
     setVisible((state) => !state);
   }
   //preprocessing image 
-
+  const createBlobUrlFromCanvas = (canvas) => {
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        resolve(url);
+      }, 'image/png');
+    });
+  };
   const captureHandler = async () => {
 
-
-    const width = 640;
-    const height = 640;
+    const width = 650;
+    const height = 650;
 
     let vid = video.current;
-    let img = photo.current;
+    let canvas = photo.current;
    
-    img.width = width;
-    img.height = height;
-    console.log("mid");
-    let ctx = img.getContext("2d");
+    canvas.width = width;
+    canvas.height = height;
+    let ctx = canvas.getContext("2d");
+    ctx.filter='grayscale(1)';
     ctx.drawImage(vid, 0, 0, width, height);
-   
-    let url = img.toDataURL('image/png');
-   
+    
+    const url = await createBlobUrlFromCanvas(canvas);
+
+    
     setVisible((state) => !state);
+    setLoading(true);
+    setProgress(0);
     const stream = vid.srcObject;
     const tracks = stream.getTracks();
     tracks.forEach(track => track.stop());
     vid.srcObject = null;
-    setLoading(true);
-    setProgress(0);
     Tesseract.recognize(
       url,
       'eng',
@@ -73,7 +80,7 @@ function App() {
           if (m.status === "recognizing text") {
             setProgress(parseInt(m.progress * 100));
           }
-
+          
         }
       }
     ).then(({ data: { text } }) => {
@@ -86,10 +93,8 @@ function App() {
       console.log(error);
       setData("Check Your Internet Connection");
     });
-
-
-
   }
+
   window.onclick = function (event) {
     if (event.target == cameradiv.current) {
       setVisible((state) => !state);
@@ -99,12 +104,12 @@ function App() {
     const fir = new FileReader();
 
     let extension = fileUpload.current.files[0].name.split('.').at(-1);
-    console.log(extension);
+    
     if (extension === "jpg" || extension === "jpeg" || extension === "png") {
 
       fir.readAsDataURL(fileUpload.current.files[0]);
       let url = URL.createObjectURL(fileUpload.current.files[0]);
-      console.log(url);
+      console.log("upload file ka url", url);
       fir.onload = function () {
 
         setLoading(true);
@@ -208,15 +213,15 @@ function App() {
 
             }
           </div>
-
+           
         </div>
       </div>
       <div ref={cameradiv} className={`modal bg-slate-800 flex w-full h-screen justify-center items-center ${visible ? '' : 'hidden'}`}>
         <div className=' relative w-full h-full max-w-[40rem] max-h-[40rem] overflow-hidden animate bg-blue-400 relative w-[40rem] h-[40rem]'>
           <video className="no-mirror w-full h-full object-cover bg-red-200" ref={video}></video>
-          <canvas ref={photo} className='hidden'></canvas>
+          <canvas ref={photo} ></canvas>
 
-          <div className='absolute left-[20px] bottom-[30px]'>
+          <div className='absolute left-[20px] bottom-[40px]'>
 
             <Button variant="contained" color="success" onClick={captureHandler}>
               Capture
