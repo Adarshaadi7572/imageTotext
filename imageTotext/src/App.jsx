@@ -6,12 +6,16 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CenterFocusWeakIcon from '@mui/icons-material/CenterFocusWeak';
 import Tesseract from 'tesseract.js';
 import LinearProgress from '@mui/material/LinearProgress';
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css'
 import './App.css';
 function App() {
   const [visible, setVisible] = useState(false);
   const [data, setData] = useState("");
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [crop, setCrop] = useState();
+  const [src, setSrc] = useState(null)
   const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
     clipPath: 'inset(50%)',
@@ -30,7 +34,7 @@ function App() {
   const image = useRef(null);
   //Handler Function 
   const cameraHandler = () => {
-    navigator.mediaDevices.getUserMedia({ video: {facingMode:'environment' } })
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       .then((stream) => {
         video.current.srcObject = stream;
         video.current.play();
@@ -48,51 +52,44 @@ function App() {
     });
   };
   const captureHandler = async () => {
-
-    const width = 650;
-    const height = 650;
-
     let vid = video.current;
-    let canvas = photo.current;
-   
-    canvas.width = width;
-    canvas.height = height;
     let ctx = canvas.getContext("2d");
-    ctx.filter='grayscale(1)';
+    ctx.filter = 'grayscale(1)';
     ctx.drawImage(vid, 0, 0, width, height);
-    
-    const url = await createBlobUrlFromCanvas(canvas);
 
-    
-    setVisible((state) => !state);
-    setLoading(true);
-    setProgress(0);
-    const stream = vid.srcObject;
-    const tracks = stream.getTracks();
-    tracks.forEach(track => track.stop());
-    vid.srcObject = null;
-    Tesseract.recognize(
-      url,
-      'eng',
-      {
-        logger: m => {
-          console.log(m);
-          if (m.status === "recognizing text") {
-            setProgress(parseInt(m.progress * 100));
-          }
-          
-        }
-      }
-    ).then(({ data: { text } }) => {
-      console.log(text);
-      setData(text);
-      setLoading(false);
-      URL.revokeObjectURL(url);
+    ctx.toBlob((blob) => {
+      setSrc(blob);
+    })
 
-    }).catch((error) => {
-      console.log(error);
-      setData("Check Your Internet Connection");
-    });
+    // setVisible((state) => !state);
+    // setLoading(true);
+    // setProgress(0);
+    // const stream = vid.srcObject;
+    // const tracks = stream.getTracks();
+    // tracks.forEach(track => track.stop());
+    // vid.srcObject = null;
+    // Tesseract.recognize(
+    //   url,
+    //   'eng',
+    //   {
+    //     logger: m => {
+    //       console.log(m);
+    //       if (m.status === "recognizing text") {
+    //         setProgress(parseInt(m.progress * 100));
+    //       }
+
+    //     }
+    //   }
+    // ).then(({ data: { text } }) => {
+    //   console.log(text);
+    //   setData(text);
+    //   setLoading(false);
+    //   URL.revokeObjectURL(url);
+
+    // }).catch((error) => {
+    //   console.log(error);
+    //   setData("Check Your Internet Connection");
+    // });
   }
 
   window.onclick = function (event) {
@@ -104,7 +101,7 @@ function App() {
     const fir = new FileReader();
 
     let extension = fileUpload.current.files[0].name.split('.').at(-1);
-    
+
     if (extension === "jpg" || extension === "jpeg" || extension === "png") {
 
       fir.readAsDataURL(fileUpload.current.files[0]);
@@ -165,7 +162,7 @@ function App() {
                 '@media (max-width: 640px)': {
                   fontSize: '0.875rem',
                   padding: '8px 16px',
-                  maxWidth:'200px',
+                  maxWidth: '200px',
                 },
               }}
             >
@@ -175,24 +172,24 @@ function App() {
                 ref={fileUpload}
                 onChange={uploadFileHandler}
                 multiple
-           
+
               />
             </Button>
             <Button variant="outlined" onClick={cameraHandler} sx={{
-                width: '100%',
-                maxWidth: '300px',
-                padding: '10px 20px',
-                '@media (max-width: 640px)': {
-                  fontSize: '0.875rem',
-                  padding: '8px 16px',
-                  width:'200px'
-                },
-              }}>
+              width: '100%',
+              maxWidth: '300px',
+              padding: '10px 20px',
+              '@media (max-width: 640px)': {
+                fontSize: '0.875rem',
+                padding: '8px 16px',
+                width: '200px'
+              },
+            }}>
               <CenterFocusWeakIcon />&nbsp;
               Open Camera
             </Button>
           </div>
-          <div className='flex-initial w-[30rem] h-[30rem] bg-slate-950 outline-dotted outline-4 outline-offset-2 outline-white rounded-md drop-shadow-2xl overflow-auto items-center'>
+          <div className='flex-initial w-[30rem] flex flex-col items-center justify-center h-[30rem] bg-slate-950 outline-dotted outline-4 outline-offset-2 outline-white rounded-md drop-shadow-2xl overflow-auto items-center'>
             {
               !loading &&
               <textarea rows={17} value={data} className='w-full h-full bg-slate-950 text-blue-400 p-4' onChange={(e) => setData(e.target.value)} disabled={false} placeholder='Extract text from image' />
@@ -206,27 +203,33 @@ function App() {
               // />
             }
             {
-              loading && <div className='w-80 mx-auto mt-[44%] flex flex-col gap-3'>
+              loading && <div className='max-w-80 mx-auto px-5 flex flex-col gap-3'>
                 <pre className='text-white mx-auto'>{`Recognizing text : ${progress} %`}</pre>
                 <LinearProgress variant="determinate" value={progress} />
               </div>
 
+
             }
           </div>
-           
+
         </div>
       </div>
       <div ref={cameradiv} className={`modal bg-slate-800 flex w-full h-screen justify-center items-center ${visible ? '' : 'hidden'}`}>
-        <div className=' relative w-full h-full max-w-[40rem] max-h-[40rem] overflow-hidden animate bg-blue-400 relative w-[40rem] h-[40rem]'>
-          <video className="no-mirror w-full h-full object-cover bg-red-200" ref={video}></video>
-          <canvas ref={photo} ></canvas>
+        <div className=' relative flex items-center justify-center w-full h-full max-w-[50rem] max-h-[50rem] overflow-hidden'>
+          <div className=' relative w-full h-full max-w-[40rem] max-h-[40rem] overflow-hidden animate m-4'>
+            <video className="no-mirror w-full h-full object-cover bg-red-200" ref={video}></video>
+            <ReactCrop crop={crop} onChange={c => setCrop(c)}>
+              <img src={src} />
+            </ReactCrop>
 
-          <div className='absolute left-[20px] bottom-[40px]'>
+            <div className='absolute left-[20px] bottom-[40px]'>
 
-            <Button variant="contained" color="success" onClick={captureHandler}>
-              Capture
-            </Button>
+              <Button variant="contained" color="success" onClick={captureHandler}>
+                Capture
+              </Button>
+            </div>
           </div>
+
         </div>
 
 
