@@ -52,22 +52,21 @@ function App() {
     });
   };
   const captureHandler = async () => {
+    let canvas = document.createElement('canvas');
     let vid = video.current;
     let ctx = canvas.getContext("2d");
     ctx.filter = 'grayscale(1)';
-    ctx.drawImage(vid, 0, 0, width, height);
+    ctx.drawImage(vid, 0, 0);
 
-    ctx.toBlob((blob) => {
-      setSrc(blob);
-    })
-
+    let url = await createBlobUrlFromCanvas(canvas);
+    setSrc(url);
     // setVisible((state) => !state);
     // setLoading(true);
     // setProgress(0);
-    // const stream = vid.srcObject;
-    // const tracks = stream.getTracks();
-    // tracks.forEach(track => track.stop());
-    // vid.srcObject = null;
+    const stream = vid.srcObject;
+    const tracks = stream.getTracks();
+    tracks.forEach(track => track.stop());
+    vid.srcObject = null;
     // Tesseract.recognize(
     //   url,
     //   'eng',
